@@ -1,0 +1,6 @@
+{
+  "name": "Hospital Billing and GST Ledger",
+  "description": "Enterprise healthcare billing system with patient data encryption, inward/outward invoice tracking, multi-department daily ledger tallies, GST reporting, and automated financial audit summaries powered by Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

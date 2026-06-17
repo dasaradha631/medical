@@ -1,0 +1,198 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() && 
+        request.auth.token != null && 
+        'email' in request.auth.token && (
+          request.auth.token.email == 'dasaradha656@gmail.com' ||
+          request.auth.token.email == 'chdasaradha173@gmail.com' ||
+          request.auth.token.email == 'dasaradha65656@gmail.com'
+        );
+    }
+
+    function hasRole(roleName) {
+      return isSignedIn() && (
+        isBootstrappedAdmin() || 
+        (exists(/databases/$(database)/documents/staff_roles/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/staff_roles/$(request.auth.uid)).data.role == roleName)
+      );
+    }
+
+    function isCFO() {
+      return hasRole('CFO');
+    }
+
+    function isAdmin() {
+      return hasRole('Admin');
+    }
+
+    function isBillingClerk() {
+      return hasRole('Billing Clerk');
+    }
+
+    function isPharmacist() {
+      return hasRole('Pharmacist');
+    }
+
+    function isAnyStaff() {
+      return isSignedIn() && (
+        isBootstrappedAdmin() || 
+        exists(/databases/$(database)/documents/staff_roles/$(request.auth.uid))
+      );
+    }
+
+    // --- Collections ---
+
+    // 1. Staff Roles Collection
+    match /staff_roles/{uid} {
+      allow get: if isSignedIn();
+      allow list: if isBootstrappedAdmin() || isAdmin() || isCFO();
+      
+      allow create: if isSignedIn() && uid == request.auth.uid && (
+        incoming().uid == uid && 
+        incoming().email == request.auth.token.email &&
+        (incoming().role == 'Admin' || incoming().role == 'Billing Clerk' || incoming().role == 'Pharmacist' || incoming().role == 'CFO') &&
+        incoming().createdAt is string
+      ) || (isEmailVerified() && (isAdmin() || isBootstrappedAdmin()));
+
+      allow update: if isSignedIn() && (
+        (isAdmin() || isBootstrappedAdmin()) ||
+        (uid == request.auth.uid && 
+         incoming().role == existing().role && 
+         incoming().email == existing().email && 
+         incoming().uid == existing().uid && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department']))
+      );
+
+      allow delete: if isAdmin() || isBootstrappedAdmin();
+    }
+
+    // 2. Inward Invoices Collection
+    match /inward_invoices/{invoiceId} {
+      allow get, list: if isAnyStaff();
+      
+      allow create: if isEmailVerified() && isValidId(invoiceId) && (
+        (isAdmin() || isBootstrappedAdmin() || isBillingClerk() || isPharmacist() || isCFO()) &&
+        incoming().invoiceId == invoiceId &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().createdAt is string
+      );
+
+      allow update: if isEmailVerified() && isValidId(invoiceId) && (
+        isAdmin() || isBootstrappedAdmin() || isCFO() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['paymentStatus'])
+      );
+
+      allow delete: if isAdmin() || isBootstrappedAdmin() || isCFO();
+    }
+
+    // 3. Outward Invoices Collection
+    match /outward_invoices/{invoiceId} {
+      allow get, list: if isAnyStaff();
+
+      allow create: if isEmailVerified() && isValidId(invoiceId) && (
+        (isAdmin() || isBootstrappedAdmin() || isBillingClerk() || isPharmacist() || isCFO()) &&
+        incoming().invoiceId == invoiceId &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().createdAt is string
+      );
+
+      allow update: if isEmailVerified() && isValidId(invoiceId) && (
+        isAdmin() || isBootstrappedAdmin() || isCFO() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['paymentStatus'])
+      );
+
+      allow delete: if isAdmin() || isBootstrappedAdmin() || isCFO();
+    }
+
+    // 4. Daily Ledger Summaries Collection
+    match /daily_ledger_summaries/{summaryId} {
+      allow get, list: if isAnyStaff();
+      allow create, update: if isAnyStaff() && isValidId(summaryId) && (
+        incoming().summaryId == summaryId &&
+        incoming().updatedAt is string
+      );
+      allow delete: if isAdmin() || isBootstrappedAdmin() || isCFO();
+    }
+
+    // 5. Medicines Collection
+    match /medicines/{medicineId} {
+      allow get, list: if isSignedIn();
+      
+      allow create: if isEmailVerified() && isValidId(medicineId) && isAnyStaff() && (
+        incoming().medicineId == medicineId &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().createdAt is string
+      );
+
+      allow update: if isEmailVerified() && isValidId(medicineId) && isAnyStaff() && (
+        incoming().medicineId == medicineId &&
+        incoming().updatedBy == request.auth.uid &&
+        incoming().updatedAt is string
+      );
+
+      allow delete: if isEmailVerified() && isValidId(medicineId) && (
+        isAdmin() || isBootstrappedAdmin() || isPharmacist() || isCFO() || isBillingClerk()
+      );
+    }
+
+    // 6. Doctors and Pharmacy Staff Collection
+    match /doctors/{doctorId} {
+      allow get, list: if isSignedIn();
+      
+      allow create: if isEmailVerified() && isValidId(doctorId) && isAnyStaff() && (
+        incoming().doctorId == doctorId &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().createdAt is string
+      );
+
+      allow update: if isEmailVerified() && isValidId(doctorId) && isAnyStaff() && (
+        incoming().doctorId == doctorId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt
+      );
+
+      allow delete: if isEmailVerified() && isValidId(doctorId) && (
+        isAdmin() || isBootstrappedAdmin() || isPharmacist() || isCFO() || isBillingClerk()
+      );
+    }
+
+    // 7. Prescriptions Collection
+    match /prescriptions/{prescriptionId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // 8. Consultations Collection
+    match /consultations/{consultationId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

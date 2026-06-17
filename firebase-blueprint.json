@@ -1,0 +1,424 @@
+{
+  "entities": {
+    "StaffRole": {
+      "title": "StaffRole",
+      "description": "User profile containing secure staff metadata and access roles.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The unique Firebase Auth identifier of the staff member."
+        },
+        "email": {
+          "type": "string",
+          "description": "Primary communication email of the staff member."
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the hospital staff member."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Admin", "Billing Clerk", "Pharmacist", "CFO"],
+          "description": "System access level for Attribute-Based Access Control (ABAC)."
+        },
+        "department": {
+          "type": "string",
+          "description": "Operational department assigned (e.g. Outpatient, Pharmacy, Cardiology, Inpatient)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the staff record was initialized."
+        }
+      },
+      "required": ["uid", "email", "name", "role", "department", "createdAt"]
+    },
+    "InwardInvoice": {
+      "title": "InwardInvoice",
+      "description": "Purchases and expenses incurred by hospital from external vendors (e.g. drug suppliers).",
+      "type": "object",
+      "properties": {
+        "invoiceId": {
+          "type": "string"
+        },
+        "vendorName": {
+          "type": "string"
+        },
+        "vendorGstin": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "description": "List of drugs/equipment purchased with tax slabs."
+        },
+        "subTotal": {
+          "type": "number"
+        },
+        "gstTotal": {
+          "type": "number"
+        },
+        "grandTotal": {
+          "type": "number"
+        },
+        "department": {
+          "type": "string"
+        },
+        "paymentMode": {
+          "type": "string",
+          "enum": ["UPI", "Bank Transfer", "Cash"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["Paid", "Pending"]
+        },
+        "invoiceDate": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      },
+      "required": ["invoiceId", "vendorName", "items", "subTotal", "gstTotal", "grandTotal", "department", "paymentMode", "paymentStatus", "invoiceDate", "createdAt", "createdBy"]
+    },
+    "OutwardInvoice": {
+      "title": "OutwardInvoice",
+      "description": "Patient treatment, pharmacy, and medical billing data containing securely encrypted fields.",
+      "type": "object",
+      "properties": {
+        "invoiceId": {
+          "type": "string"
+        },
+        "patientNameEncrypted": {
+          "type": "string",
+          "description": "Ciphertext of patient physical name."
+        },
+        "patientIdEncrypted": {
+          "type": "string",
+          "description": "Ciphertext of unique Patient Medical Record number."
+        },
+        "patientContactEncrypted": {
+          "type": "string",
+          "description": "Ciphertext of patient contact (phone/email)."
+        },
+        "treatmentDescriptionEncrypted": {
+          "type": "string",
+          "description": "Ciphertext of diagnostic/treatment summary to ensure medical confidentiality."
+        },
+        "department": {
+          "type": "string",
+          "description": "Servicing department (e.g. OPD, Cardiology, Pharmacy, Emergency)."
+        },
+        "items": {
+          "type": "array"
+        },
+        "subTotal": {
+          "type": "number"
+        },
+        "gstTotal": {
+          "type": "number"
+        },
+        "grandTotal": {
+          "type": "number"
+        },
+        "paymentMode": {
+          "type": "string",
+          "enum": ["Cash", "PhonePe", "GooglePay", "UPI"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["Received", "Refunded"]
+        },
+        "invoiceDate": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "doctorId": {
+          "type": "string"
+        },
+        "doctorName": {
+          "type": "string"
+        }
+      },
+      "required": ["invoiceId", "patientNameEncrypted", "patientIdEncrypted", "patientContactEncrypted", "treatmentDescriptionEncrypted", "department", "items", "subTotal", "gstTotal", "grandTotal", "paymentMode", "paymentStatus", "invoiceDate", "createdAt", "createdBy"]
+    },
+    "DailyLedgerSummary": {
+      "title": "DailyLedgerSummary",
+      "description": "Aggregate departmental financial stats calculated each day for audits and fast tally reporting.",
+      "type": "object",
+      "properties": {
+        "summaryId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "totalInward": {
+          "type": "number"
+        },
+        "totalOutward": {
+          "type": "number"
+        },
+        "totalGstCollected": {
+          "type": "number"
+        },
+        "totalGstPaid": {
+          "type": "number"
+        },
+        "cashTotal": {
+          "type": "number"
+        },
+        "phonePayTotal": {
+          "type": "number"
+        },
+        "googlePayTotal": {
+          "type": "number"
+        },
+        "upiTotal": {
+          "type": "number"
+        },
+        "otherPayTotal": {
+          "type": "number"
+        },
+        "netRevenue": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["summaryId", "date", "department", "totalInward", "totalOutward", "totalGstCollected", "totalGstPaid", "cashTotal", "phonePayTotal", "googlePayTotal", "upiTotal", "otherPayTotal", "netRevenue", "updatedAt"]
+    },
+    "Medicine": {
+      "title": "Medicine",
+      "description": "Hospital pharmacy medicine catalog containing inventory stock details, pricing structure, and tax rate classifications.",
+      "type": "object",
+      "properties": {
+        "medicineId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "stock": {
+          "type": "number"
+        },
+        "price": {
+          "type": "number"
+        },
+        "gstRate": {
+          "type": "number",
+          "enum": [0, 5, 12, 18, 28]
+        },
+        "expiryDate": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedBy": {
+          "type": "string"
+        }
+      },
+      "required": ["medicineId", "name", "code", "category", "stock", "price", "gstRate", "expiryDate", "createdAt", "createdBy"]
+    },
+    "Doctor": {
+      "title": "Doctor",
+      "description": "Hospital medical physicians, specialists, and active pharmacy staff personnel directory.",
+      "type": "object",
+      "properties": {
+        "doctorId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "specialty": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Active", "On Leave"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      },
+      "required": ["doctorId", "name", "specialty", "department", "phone", "status", "createdAt", "createdBy"]
+    },
+    "Prescription": {
+      "title": "Prescription",
+      "description": "Hospital medical prescription details containing patient diagnostics and prescribed medication items.",
+      "type": "object",
+      "properties": {
+        "prescriptionId": {
+          "type": "string"
+        },
+        "patientNameEncrypted": {
+          "type": "string"
+        },
+        "patientIdEncrypted": {
+          "type": "string"
+        },
+        "patientContactEncrypted": {
+          "type": "string"
+        },
+        "symptomsEncrypted": {
+          "type": "string"
+        },
+        "diagnosisEncrypted": {
+          "type": "string"
+        },
+        "medications": {
+          "type": "string"
+        },
+        "consultationFee": {
+          "type": "number"
+        },
+        "clinicNotes": {
+          "type": "string"
+        },
+        "doctorId": {
+          "type": "string"
+        },
+        "doctorName": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Billed", "Completed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      },
+      "required": ["prescriptionId", "patientNameEncrypted", "patientIdEncrypted", "medications", "status", "createdAt", "createdBy"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "Hospital patient consultation tickets assigned to doctors with department and fee details.",
+      "type": "object",
+      "properties": {
+        "consultationId": {
+          "type": "string"
+        },
+        "patientName": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "patientContact": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "doctorId": {
+          "type": "string"
+        },
+        "doctorName": {
+          "type": "string"
+        },
+        "consultationFee": {
+          "type": "number"
+        },
+        "paymentMode": {
+          "type": "string",
+          "enum": ["Cash", "PhonePe", "GooglePay", "UPI"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending Doctor", "Prescribed", "Completed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      },
+      "required": ["consultationId", "patientName", "patientId", "department", "doctorId", "doctorName", "consultationFee", "paymentMode", "status", "createdAt", "createdBy"]
+    }
+  },
+  "firestore": {
+    "staff_roles/{uid}": {
+      "schema": "StaffRole",
+      "description": "Secure storage mapping individual Firebase user UIDs to designated hospital roles."
+    },
+    "inward_invoices/{invoiceId}": {
+      "schema": "InwardInvoice",
+      "description": "Purchased supplies, medications, and clinical equipment inward entries."
+    },
+    "outward_invoices/{invoiceId}": {
+      "schema": "OutwardInvoice",
+      "description": "Detailed patient receipts and checkout records containing client-side/server-side patient confidentiality encryptions."
+    },
+    "daily_ledger_summaries/{summaryId}": {
+      "schema": "DailyLedgerSummary",
+      "description": "Departmental operational reports used for tax and ledger audit operations."
+    },
+    "medicines/{medicineId}": {
+      "schema": "Medicine",
+      "description": "List of active prescription drugs and medical inventory items in hospital pharmacy stores."
+    },
+    "doctors/{doctorId}": {
+      "schema": "Doctor",
+      "description": "Information about doctors, healthcare practitioners, and pharmacy staff working in the hospital."
+    },
+    "prescriptions/{prescriptionId}": {
+      "schema": "Prescription",
+      "description": "Prescription entries containing medications, patient confidentiality, and diagnosis fields."
+    },
+    "consultations/{consultationId}": {
+      "schema": "Consultation",
+      "description": "Consultation tickets mapping patients to active assignments under designated clinic doctors."
+    }
+  }
+}
